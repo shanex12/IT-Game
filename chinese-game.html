@@ -1,0 +1,1586 @@
+<!doctype html>
+<html lang="th">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เกมคำศัพท์ภาษาจีน - 中文游戏</title>
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: auto;
+    }
+
+    .page {
+      width: 100%;
+      min-height: 100%;
+      display: none;
+    }
+
+    .page.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .game-container {
+      width: 100%;
+      min-height: 100%;
+      font-family: 'Georgia', 'STSong', 'SimSun', serif;
+      display: flex;
+      flex-direction: column;
+      padding: 24px;
+      background: linear-gradient(135deg, #1a0000 0%, #4a0000 50%, #8b0000 100%);
+      position: relative;
+    }
+
+    .game-container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-image: 
+        radial-gradient(circle at 20% 30%, rgba(255, 215, 0, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(255, 0, 0, 0.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .game-title {
+      font-size: 42px;
+      font-weight: bold;
+      margin-bottom: 8px;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.5), 0 0 20px rgba(255, 215, 0, 0.5);
+      color: #ffd700;
+      letter-spacing: 4px;
+    }
+
+    .welcome-text {
+      font-size: 18px;
+      color: #ffe4b5;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .stats-bar {
+      display: flex;
+      justify-content: space-around;
+      gap: 16px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      position: relative;
+      z-index: 1;
+    }
+
+    .stat-card {
+      flex: 1;
+      min-width: 120px;
+      padding: 16px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      border: 2px solid #ffd700;
+      background: linear-gradient(135deg, #8b0000 0%, #dc143c 100%);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(255, 215, 0, 0.1) 0%, transparent 70%);
+      animation: rotate 20s linear infinite;
+    }
+
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .stat-label {
+      font-size: 14px;
+      margin-bottom: 4px;
+      color: #ffe4b5;
+      position: relative;
+      z-index: 1;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: bold;
+      color: #ffd700;
+      position: relative;
+      z-index: 1;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .game-area {
+      flex: 1;
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      background: rgba(139, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      border: 3px solid #ffd700;
+      position: relative;
+      z-index: 1;
+    }
+
+    .start-screen {
+      text-align: center;
+      width: 100%;
+  height: 100vh;
+  min-height: 100vh;
+  justify-content: center;
+  align-items: center;
+    }
+
+    .start-icon {
+      font-size: 80px;
+      margin-bottom: 24px;
+      filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.5));
+    }
+
+    .start-message {
+      font-size: 28px;
+      margin-bottom: 32px;
+      color: #ffd700;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+      font-weight: bold;
+    }
+
+    .quiz-screen {
+      width: 100%;
+      max-width: 600px;
+      display: none;
+    }
+
+    .quiz-screen.active {
+      display: block;
+    }
+
+    .character-display {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .chinese-character {
+      font-size: 90px;
+      margin-bottom: 12px;
+      font-weight: bold;
+      color: #ffd700;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.5), 0 0 30px rgba(255, 215, 0, 0.6);
+    }
+
+    .pinyin {
+      font-size: 28px;
+      margin-bottom: 8px;
+      color: #ffe4b5;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .question-text {
+      font-size: 20px;
+      margin-bottom: 24px;
+      text-align: center;
+      color: #ffe4b5;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .option-button {
+      padding: 20px;
+      font-size: 18px;
+      border: 3px solid #ffd700;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      font-weight: 600;
+      background: linear-gradient(135deg, #8b0000 0%, #dc143c 100%);
+      color: #ffe4b5;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .option-button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(255, 215, 0, 0.4);
+      border-color: #ffed4e;
+    }
+
+    .option-button:disabled {
+      cursor: not-allowed;
+      opacity: 0.6;
+    }
+
+    .option-button.correct {
+      border-color: #00ff00;
+      background: linear-gradient(135deg, #006400 0%, #32cd32 100%);
+      animation: pulse 0.5s;
+    }
+
+    .option-button.incorrect {
+      border-color: #ff0000;
+      background: linear-gradient(135deg, #8b0000 0%, #ff0000 100%);
+      animation: shake 0.5s;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-10px); }
+      75% { transform: translateX(10px); }
+    }
+
+    .feedback {
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+      margin-bottom: 16px;
+      min-height: 30px;
+      color: #ffd700;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .action-button {
+      padding: 16px 48px;
+      font-size: 20px;
+      border: 3px solid #ffd700;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      display: block;
+      margin: 0 auto;
+      background: linear-gradient(135deg, #8b0000 0%, #dc143c 100%);
+      color: #ffd700;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .action-button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(255, 215, 0, 0.5);
+      border-color: #ffed4e;
+    }
+
+    .action-button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 16px 24px;
+      border-radius: 8px;
+      font-weight: bold;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      z-index: 1000;
+      animation: slideIn 0.3s;
+      color: #ffffff;
+      border: 2px solid #ffd700;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .result-detail {
+      font-size: 20px;
+      margin-bottom: 32px;
+      white-space: pre-line;
+      color: #ffe4b5;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .final-score {
+      font-size: 52px;
+      margin: 20px 0;
+      font-weight: bold;
+      color: #ffd700;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.5), 0 0 20px rgba(255, 215, 0, 0.5);
+    }
+
+    .game-card {
+      transition: all 0.3s;
+      padding: 24px;
+      border-radius: 16px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+      background: linear-gradient(135deg, #8b0000 0%, #dc143c 100%);
+      border: 3px solid #ffd700;
+      color: #ffe4b5;
+    }
+
+    .game-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(255, 215, 0, 0.4);
+      border-color: #ffed4e;
+    }
+
+    .menu-title {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 12px;
+      color: #ffd700;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+    }
+
+    .menu-subtitle {
+      font-size: 16px;
+      color: #ffe4b5;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .small-button {
+      padding: 12px 24px;
+      font-size: 16px;
+      background: linear-gradient(135deg, #b8860b 0%, #ffd700 100%);
+      color: #1a0000;
+      border: 2px solid #ffd700;
+      font-weight: bold;
+      text-shadow: none;
+    }
+
+    .small-button:hover {
+      background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    }
+
+    .login-screen {
+      max-width: 400px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .login-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .form-label {
+      font-size: 18px;
+      font-weight: bold;
+      color: #ffd700;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    }
+
+    .form-input {
+      padding: 12px 16px;
+      font-size: 16px;
+      border: 3px solid #ffd700;
+      border-radius: 8px;
+      background: rgba(139, 0, 0, 0.6);
+      color: #ffe4b5;
+      font-weight: 600;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: #ffed4e;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+    }
+
+    .admin-panel {
+      max-width: 500px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .admin-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .coin-control {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .coin-input {
+      flex: 1;
+      padding: 12px;
+      font-size: 18px;
+      border: 3px solid #ffd700;
+      border-radius: 8px;
+      background: rgba(139, 0, 0, 0.6);
+      color: #ffe4b5;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .user-info {
+      text-align: right;
+      margin-bottom: 16px;
+      color: #ffe4b5;
+      font-size: 16px;
+      text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .logout-button {
+      padding: 8px 16px;
+      font-size: 14px;
+      background: linear-gradient(135deg, #8b0000 0%, #dc143c 100%);
+      color: #ffd700;
+      border: 2px solid #ffd700;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-left: 12px;
+    }
+
+    .logout-button:hover {
+      background: linear-gradient(135deg, #dc143c 0%, #ff0000 100%);
+      border-color: #ffed4e;
+    }
+
+    .dragon-decoration {
+      position: absolute;
+      font-size: 60px;
+      opacity: 0.3;
+      animation: float 6s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+
+    .dragon-left {
+      top: 20%;
+      left: 5%;
+    }
+
+    .dragon-right {
+      top: 60%;
+      right: 5%;
+      animation-delay: 3s;
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="/_sdk/element_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body><!-- Page 1: Welcome Page -->
+  <div class="page active" id="welcomePage">
+   <div class="game-container">
+    <div class="dragon-decoration dragon-left">
+     🐉
+    </div>
+    <div class="dragon-decoration dragon-right">
+     🐲
+    </div>
+    <div class="game-area">
+     <div class="start-screen">
+      <div class="start-icon">
+       🏮
+      </div>
+      <div class="start-message menu-title">
+       ยินดีต้อนรับสู่เกมคำศัพท์ภาษาจีน
+      </div>
+      <div class="welcome-text menu-subtitle" style="margin-bottom: 32px;">
+       欢迎来到中文词汇游戏
+      </div><button class="action-button" id="startGameButton" style="font-size: 28px; padding: 20px 60px;"> 🎮 เริ่มเกม 开始游戏 </button> <button class="action-button small-button" id="adminLoginButton" style="margin-top: 20px; padding: 10px 24px; font-size: 14px;"> 🔑 เข้าสู่ระบบแอดมิน </button>
+     </div>
+    </div>
+   </div>
+  </div><!-- Page 2: Game Page -->
+  <div class="page" id="gamePage">
+   <div class="game-container">
+    <div class="dragon-decoration dragon-left">
+     🐉
+    </div>
+    <div class="dragon-decoration dragon-right">
+     🐲
+    </div><!-- Admin Login Modal -->
+    <div class="game-area" id="adminLoginScreen" style="display: none;">
+     <div class="start-screen login-screen">
+      <div class="start-icon">
+       🔐
+      </div>
+      <div class="start-message menu-title">
+       เข้าสู่ระบบแอดมิน
+      </div>
+      <div class="welcome-text menu-subtitle" style="margin-bottom: 32px;">
+       Admin Login 管理员登录
+      </div>
+      <form class="login-form" id="loginForm">
+       <div class="form-group"><label class="form-label" for="username">ชื่อผู้ใช้ 用户名</label> <input type="text" id="username" class="form-input" required>
+       </div>
+       <div class="form-group"><label class="form-label" for="password">รหัสผ่าน 密码</label> <input type="password" id="password" class="form-input" required>
+       </div><button type="submit" class="action-button">เข้าสู่ระบบ 登录</button> <button type="button" class="action-button small-button" id="cancelLoginButton" style="margin-top: 12px;"> ยกเลิก 取消 </button>
+      </form>
+     </div>
+    </div><!-- Admin Panel -->
+    <div class="game-area" id="adminPanel" style="display: none;">
+     <div class="user-info"><span>👤 <strong id="adminUsername"></strong></span> <button class="logout-button" id="adminLogout">ออกจากระบบ 退出</button>
+     </div>
+     <div class="start-screen admin-panel">
+      <div class="start-icon">
+       👑
+      </div>
+      <div class="start-message menu-title">
+       แผงควบคุมแอดมิน 管理面板
+      </div>
+      <div class="admin-controls">
+       <div style="padding: 20px; background: rgba(255, 215, 0, 0.1); border-radius: 12px; border: 2px solid #ffd700;">
+        <div style="color: #ffd700; font-weight: bold; margin-bottom: 16px; font-size: 20px; text-align: center;">
+         💰 เหรียญปัจจุบัน: <span id="adminCoinDisplay">0</span>
+        </div>
+        <div class="coin-control"><input type="number" id="coinAmount" class="coin-input" placeholder="จำนวนเหรียญ" value="100"> <button class="action-button" id="addCoinsBtn" style="padding: 12px 24px; font-size: 16px;"> ➕ เพิ่มเหรียญ 加金币 </button>
+        </div>
+       </div>
+       <div style="padding: 20px; background: rgba(255, 215, 0, 0.1); border-radius: 12px; border: 2px solid #ffd700;">
+        <div style="color: #ffd700; font-weight: bold; margin-bottom: 12px; font-size: 18px;">
+         📊 สถิติเกม
+        </div>
+        <div style="color: #ffe4b5; font-size: 16px; line-height: 2;">
+         คะแนนสูงสุด: <span id="adminHighScore" style="color: #ffd700; font-weight: bold;">0</span><br>
+          ด่านที่ปลดล็อค: <span id="adminUnlockedStages" style="color: #ffd700; font-weight: bold;">1</span>
+        </div>
+       </div><button class="action-button" id="resetGameBtn"> 🔄 รีเซ็ตเกม 重置游戏 </button>
+      </div>
+     </div>
+    </div><!-- Player Game Area -->
+    <div id="playerGameArea" style="display: none; width: 100%;">
+     <div class="user-info" style="position: relative; z-index: 10;"><span>👤 <strong id="playerUsername"></strong></span> <button class="logout-button" id="playerLogout">ออกจากระบบ 退出</button>
+     </div>
+     <div class="header" id="header" style="display: none;">
+      <h1 class="game-title">เกมคำศัพท์ภาษาจีน 🎮</h1>
+      <p class="welcome-text">มาเรียนภาษาจีนกันเถอะ!</p>
+     </div>
+     <div class="stats-bar" id="statsBar" style="display: none;">
+      <div class="stat-card" id="coinCard">
+       <div class="stat-label">
+        เหรียญ 💰
+       </div>
+       <div class="stat-value" id="coinValue">
+        0
+       </div>
+      </div>
+      <div class="stat-card" id="scoreCard">
+       <div class="stat-label">
+        คะแนน
+       </div>
+       <div class="stat-value" id="scoreValue">
+        0
+       </div>
+      </div>
+      <div class="stat-card" id="stageCard">
+       <div class="stat-label">
+        ด่าน
+       </div>
+       <div class="stat-value" id="stageValue">
+        1
+       </div>
+      </div>
+      <div class="stat-card" id="streakCard">
+       <div class="stat-label">
+        ติดต่อกัน
+       </div>
+       <div class="stat-value" id="streakValue">
+        0
+       </div>
+      </div>
+     </div>
+     <div class="game-area" id="gameArea">
+      <div class="start-screen" id="menuScreen">
+       <div class="start-icon">
+        🎮
+       </div>
+       <div class="start-message menu-title">
+        เลือกเกมที่คุณชอบ
+       </div>
+       <div class="welcome-text menu-subtitle" style="margin-bottom: 16px;">
+        เลือก 1 จาก 3 เกมด้านล่าง
+       </div>
+       <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 24px;">
+        <div style="font-size: 32px;">
+         💰
+        </div>
+        <div style="font-size: 24px; font-weight: bold; color: #ffd700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);" id="menuCoins">
+         0 เหรียญ
+        </div><button id="shopButton" class="small-button" style="padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 16px; margin-left: 12px;">🏪 ร้านค้า</button>
+       </div>
+       <div style="display: flex; gap: 20px; justify-content: center; align-items: stretch; flex-wrap: wrap; width: 100%; max-width: 900px; margin: 0 auto;">
+        <div class="game-card" id="quizCard" style="flex: 1; min-width: 250px; max-width: 280px;">
+         <div style="font-size: 48px; margin-bottom: 12px;">
+          🎯
+         </div>
+         <div style="font-size: 22px; font-weight: bold; margin-bottom: 8px; color: #ffd700;">
+          ทายคำศัพท์
+         </div>
+         <div style="font-size: 14px; opacity: 0.9;">
+          เลือกคำแปลที่ถูกต้อง<br>
+          ตามด่านที่เลือก
+         </div>
+        </div>
+        <div class="game-card" id="matchCard" style="flex: 1; min-width: 250px; max-width: 280px;">
+         <div style="font-size: 48px; margin-bottom: 12px;">
+          🔗
+         </div>
+         <div style="font-size: 22px; font-weight: bold; margin-bottom: 8px; color: #ffd700;">
+          จับคู่คำ
+         </div>
+         <div style="font-size: 14px; opacity: 0.9;">
+          จับคู่คำจีนกับความหมาย<br>
+          6 คู่
+         </div>
+        </div>
+        <div class="game-card" id="memoryCard" style="flex: 1; min-width: 250px; max-width: 280px;">
+         <div style="font-size: 48px; margin-bottom: 12px;">
+          🧠
+         </div>
+         <div style="font-size: 22px; font-weight: bold; margin-bottom: 8px; color: #ffd700;">
+          เกมจำคำ
+         </div>
+         <div style="font-size: 14px; opacity: 0.9;">
+          เปิดการ์ดหาคู่<br>
+          8 คู่
+         </div>
+        </div>
+       </div>
+      </div>
+      <div class="start-screen" id="shopScreen" style="display: none;"><button class="action-button small-button" id="backToMenu" style="position: absolute; top: 20px; left: 20px;">⬅️ กลับ</button>
+       <div class="start-icon">
+        🏪
+       </div>
+       <div class="start-message menu-title">
+        ร้านค้าด่าน
+       </div>
+       <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 32px;">
+        <div style="font-size: 28px;">
+         💰
+        </div>
+        <div style="font-size: 20px; font-weight: bold; color: #ffd700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);" id="shopCoins">
+         0 เหรียญ
+        </div>
+       </div>
+       <div id="stageList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; width: 100%; max-width: 900px; margin: 0 auto;"></div>
+      </div>
+      <div class="start-screen" id="stageSelectScreen" style="display: none;"><button class="action-button small-button" id="backToMenu2" style="position: absolute; top: 20px; left: 20px;">⬅️ กลับ</button>
+       <div class="start-icon">
+        🎯
+       </div>
+       <div class="start-message menu-title" id="gameTypeTitle">
+        เลือกด่าน - ทายคำศัพท์
+       </div>
+       <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 32px;">
+        <div style="font-size: 28px;">
+         💰
+        </div>
+        <div style="font-size: 20px; font-weight: bold; color: #ffd700; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);" id="stageSelectCoins">
+         0 เหรียญ
+        </div>
+       </div>
+       <div id="stageSelectList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; width: 100%; max-width: 800px; margin: 0 auto; justify-items: center;"></div>
+      </div>
+      <div class="quiz-screen" id="quizScreen"><button class="action-button small-button" id="homeButton" style="position: absolute; top: 20px; left: 20px;">🏠 หน้าหลัก</button>
+       <div class="character-display">
+        <div class="chinese-character" id="chineseChar">
+         你好
+        </div>
+        <div class="pinyin" id="pinyinText">
+         nǐ hǎo
+        </div>
+       </div>
+       <div class="question-text">
+        คำนี้แปลว่าอะไร?
+       </div>
+       <div class="options-grid" id="optionsGrid"></div>
+       <div class="feedback" id="feedback"></div><button class="action-button" id="nextButton" style="display: none;">ถัดไป 下一个</button>
+      </div>
+      <div class="quiz-screen" id="matchingGame"><button class="action-button small-button" id="homeButton2" style="position: absolute; top: 20px; left: 20px;">🏠 หน้าหลัก</button>
+       <div class="question-text">
+        จับคู่คำภาษาจีนกับความหมาย
+       </div>
+       <div class="feedback" id="matchFeedback"></div>
+       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; width: 100%;">
+        <div id="chineseColumn" style="display: flex; flex-direction: column; gap: 12px;"></div>
+        <div id="thaiColumn" style="display: flex; flex-direction: column; gap: 12px;"></div>
+       </div>
+      </div>
+      <div class="quiz-screen" id="memoryGame"><button class="action-button small-button" id="homeButton3" style="position: absolute; top: 20px; left: 20px;">🏠 หน้าหลัก</button>
+       <div class="question-text">
+        เปิดการ์ดเพื่อหาคู่ที่ตรงกัน
+       </div>
+       <div class="feedback" id="memoryFeedback"></div>
+       <div id="memoryGrid" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; width: 100%; max-width: 500px; margin: 0 auto;"></div>
+      </div>
+      <div class="start-screen" id="resultScreen" style="display: none;">
+       <div class="start-icon">
+        🏆
+       </div>
+       <div class="start-message" id="resultMessage">
+        ยอดเยี่ยม!
+       </div>
+       <div class="final-score" id="finalScore">
+        0 คะแนน
+       </div>
+       <div class="result-detail" id="resultDetails">
+        คุณตอบถูก 0 จาก 15 ข้อ
+       </div><button class="action-button" id="playAgainButton">เล่นอีกครั้ง 再玩一次</button>
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+  <script>
+    const vocabulary = [
+      { char: '你好', pinyin: 'nǐ hǎo', meaning: 'สวัสดี', alt: ['ลาก่อน', 'ขอบคุณ', 'ขอโทษ'] },
+      { char: '谢谢', pinyin: 'xièxie', meaning: 'ขอบคุณ', alt: ['สวัสดี', 'ลาก่อน', 'ยินดีต้อนรับ'] },
+      { char: '再见', pinyin: 'zàijiàn', meaning: 'ลาก่อน', alt: ['สวัสดี', 'กรุณา', 'ขอโทษ'] },
+      { char: '对不起', pinyin: 'duìbuqǐ', meaning: 'ขอโทษ', alt: ['สวัสดี', 'ขอบคุณ', 'ใช่'] },
+      { char: '是', pinyin: 'shì', meaning: 'ใช่/เป็น', alt: ['ไม่ใช่', 'อาจจะ', 'ใคร'] },
+      { char: '不', pinyin: 'bù', meaning: 'ไม่ใช่', alt: ['ใช่', 'ดี', 'ไม่ดี'] },
+      { char: '好', pinyin: 'hǎo', meaning: 'ดี', alt: ['ไม่ดี', 'ใหญ่', 'เล็ก'] },
+      { char: '大', pinyin: 'dà', meaning: 'ใหญ่', alt: ['เล็ก', 'ดี', 'ใหม่'] },
+      { char: '小', pinyin: 'xiǎo', meaning: 'เล็ก', alt: ['ใหญ่', 'เก่า', 'ร้อน'] },
+      { char: '爱', pinyin: 'ài', meaning: 'รัก', alt: ['เกลียด', 'ชอบ', 'ต้องการ'] },
+      { char: '吃', pinyin: 'chī', meaning: 'กิน', alt: ['ดื่ม', 'นอน', 'วิ่ง'] },
+      { char: '喝', pinyin: 'hē', meaning: 'ดื่ม', alt: ['กิน', 'เดิน', 'เรียน'] },
+      { char: '学习', pinyin: 'xuéxí', meaning: 'เรียน', alt: ['เล่น', 'ทำงาน', 'นอน'] },
+      { char: '朋友', pinyin: 'péngyou', meaning: 'เพื่อน', alt: ['ครู', 'นักเรียน', 'พ่อแม่'] },
+      { char: '老师', pinyin: 'lǎoshī', meaning: 'ครู', alt: ['นักเรียน', 'หมอ', 'เพื่อน'] }
+    ];
+
+    // User Management
+    const users = {
+      admin: { password: 'admin123', role: 'admin' }
+    };
+
+    let currentUser = null;
+    let currentQuestion = 0;
+    let score = 0;
+    let streak = 0;
+    let correctAnswers = 0;
+    let isAnswered = false;
+    let currentGame = 'quiz';
+    let currentStage = 1;
+    let totalCoins = 0;
+    let unlockedStages = [1];
+    let highScore = 0;
+    
+    let selectedChinese = null;
+    let selectedThai = null;
+    let matchedPairs = 0;
+    
+    let flippedCards = [];
+    let matchedCards = 0;
+    
+    const stageConfig = [
+      { stage: 1, name: 'ด่าน 1: เริ่มต้น', cost: 0, difficulty: 'ง่าย', vocabCount: 5, questions: 5, reward: 10 },
+      { stage: 2, name: 'ด่าน 2: พื้นฐาน', cost: 30, difficulty: 'ง่าย', vocabCount: 8, questions: 8, reward: 15 },
+      { stage: 3, name: 'ด่าน 3: ฝึกฝน', cost: 50, difficulty: 'ปานกลาง', vocabCount: 10, questions: 10, reward: 20 },
+      { stage: 4, name: 'ด่าน 4: ท้าทาย', cost: 80, difficulty: 'ปานกลาง', vocabCount: 12, questions: 12, reward: 25 },
+      { stage: 5, name: 'ด่าน 5: ผู้เชี่ยวชาญ', cost: 120, difficulty: 'ยาก', vocabCount: 15, questions: 15, reward: 30 },
+      { stage: 6, name: 'ด่าน 6: ยอดนักเรียน', cost: 150, difficulty: 'ยาก', vocabCount: 15, questions: 15, reward: 35 },
+      { stage: 7, name: 'ด่าน 7: อาจารย์', cost: 200, difficulty: 'ยากมาก', vocabCount: 15, questions: 15, reward: 40 },
+      { stage: 8, name: 'ด่าน 8: เซียนภาษา', cost: 250, difficulty: 'ยากมาก', vocabCount: 15, questions: 15, reward: 45 },
+      { stage: 9, name: 'ด่าน 9: ตำนาน', cost: 300, difficulty: 'ยากที่สุด', vocabCount: 15, questions: 15, reward: 50 },
+      { stage: 10, name: 'ด่าน 10: เทพเจ้า', cost: 400, difficulty: 'ยากที่สุด', vocabCount: 15, questions: 15, reward: 100 }
+    ];
+
+    // Page Navigation
+    function showPage(pageId) {
+      document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+      });
+      document.getElementById(pageId).classList.add('active');
+    }
+
+    document.getElementById('startGameButton').addEventListener('click', () => {
+      currentUser = { username: 'guest', role: 'player' };
+      showPage('gamePage');
+      showPlayerGame();
+
+      // บังคับเข้าเมนูเลือก 3 เกม
+      goToMenu();
+    });
+
+    // Admin Login Button - Go to Game Page and show login
+    document.getElementById('adminLoginButton').addEventListener('click', () => {
+      showPage('gamePage');
+      document.getElementById('adminLoginScreen').style.display = 'flex';
+    });
+
+    // Cancel Login Button - Back to Welcome Page
+    document.getElementById('cancelLoginButton').addEventListener('click', () => {
+      showPage('welcomePage');
+      document.getElementById('adminLoginScreen').style.display = 'none';
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+    });
+
+    // Login System
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      if (users[username] && users[username].password === password) {
+        currentUser = { username, role: users[username].role };
+        handleLogin();
+      } else {
+        showToast('ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง! 用户名或密码错误！', '#dc143c');
+      }
+    });
+
+    function handleLogin() {
+      document.getElementById('adminLoginScreen').style.display = 'none';
+      
+      if (currentUser.role === 'admin') {
+        showAdminPanel();
+      } else {
+        showPlayerGame();
+      }
+    }
+
+    function showAdminPanel() {
+      document.getElementById('adminPanel').style.display = 'flex';
+      document.getElementById('playerGameArea').style.display = 'none';
+      document.getElementById('adminUsername').textContent = currentUser.username;
+      loadGameData();
+      updateAdminDisplay();
+    }
+
+    function showPlayerGame() {
+      document.getElementById('playerGameArea').style.display = 'block';
+      document.getElementById('adminPanel').style.display = 'none';
+      document.getElementById('adminLoginScreen').style.display = 'none';
+      
+      if (currentUser.username !== 'guest') {
+        document.getElementById('playerUsername').textContent = currentUser.username;
+      } else {
+        document.querySelector('#playerGameArea .user-info').style.display = 'none';
+      }
+      loadGameData();
+      goToMenu();
+    }
+
+    function logout() {
+      currentUser = null;
+      showPage('welcomePage');
+      document.getElementById('adminPanel').style.display = 'none';
+      document.getElementById('playerGameArea').style.display = 'none';
+      document.getElementById('adminLoginScreen').style.display = 'none';
+      document.getElementById('username').value = '';
+      document.getElementById('password').value = '';
+      document.querySelector('#playerGameArea .user-info').style.display = 'block';
+    }
+
+    // Admin Controls
+    document.getElementById('addCoinsBtn').addEventListener('click', () => {
+      const amount = parseInt(document.getElementById('coinAmount').value) || 0;
+      if (amount > 0) {
+        totalCoins += amount;
+        saveGameProgress();
+        updateAdminDisplay();
+        showToast(`เพิ่มเหรียญ ${amount} สำเร็จ! 成功加 ${amount} 金币！`, '#22c55e');
+      }
+    });
+
+    document.getElementById('resetGameBtn').addEventListener('click', () => {
+      const btn = document.getElementById('resetGameBtn');
+      const originalText = btn.textContent;
+      
+      btn.textContent = '⚠️ คลิกอีกครั้งเพื่อยืนยัน';
+      btn.style.background = 'linear-gradient(135deg, #ff0000 0%, #dc143c 100%)';
+      
+      const confirmReset = () => {
+        totalCoins = 0;
+        unlockedStages = [1];
+        highScore = 0;
+        score = 0;
+        saveGameProgress();
+        updateAdminDisplay();
+        showToast('รีเซ็ตเกมสำเร็จ! 游戏重置成功！', '#3b82f6');
+        
+        btn.textContent = originalText;
+        btn.style.background = '';
+        btn.onclick = firstClick;
+      };
+      
+      const firstClick = () => {
+        btn.textContent = '⚠️ คลิกอีกครั้งเพื่อยืนยัน';
+        btn.style.background = 'linear-gradient(135deg, #ff0000 0%, #dc143c 100%)';
+        btn.onclick = confirmReset;
+        
+        setTimeout(() => {
+          btn.textContent = originalText;
+          btn.style.background = '';
+          btn.onclick = firstClick;
+        }, 3000);
+      };
+      
+      btn.onclick = confirmReset;
+      
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.background = '';
+        btn.onclick = firstClick;
+      }, 3000);
+    });
+
+    document.getElementById('adminLogout').addEventListener('click', logout);
+    document.getElementById('playerLogout').addEventListener('click', logout);
+
+    function updateAdminDisplay() {
+      document.getElementById('adminCoinDisplay').textContent = totalCoins;
+      document.getElementById('adminHighScore').textContent = highScore;
+      document.getElementById('adminUnlockedStages').textContent = unlockedStages.length;
+    }
+
+    // Game Functions
+    function loadGameData() {
+      const savedData = localStorage.getItem('chineseGameData');
+      if (savedData) {
+        const data = JSON.parse(savedData);
+        totalCoins = data.totalCoins || 0;
+        unlockedStages = data.unlockedStages || [1];
+        highScore = data.highScore || 0;
+      }
+      updateCoinDisplay();
+      if (currentUser && currentUser.role === 'admin') {
+        updateAdminDisplay();
+      }
+    }
+
+    function saveGameProgress() {
+      const data = {
+        totalCoins: totalCoins,
+        unlockedStages: unlockedStages,
+        highScore: Math.max(highScore, score),
+        lastScore: score,
+        timestamp: new Date().toISOString()
+      };
+      localStorage.setItem('chineseGameData', JSON.stringify(data));
+      highScore = data.highScore;
+    }
+    
+    function updateCoinDisplay() {
+      document.getElementById('coinValue').textContent = totalCoins;
+      document.getElementById('menuCoins').textContent = totalCoins + ' เหรียญ';
+      document.getElementById('shopCoins').textContent = totalCoins + ' เหรียญ';
+      document.getElementById('stageSelectCoins').textContent = totalCoins + ' เหรียญ';
+    }
+
+    function showToast(message, bgColor) {
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = message;
+      toast.style.backgroundColor = bgColor;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.remove();
+      }, 3000);
+    }
+
+    function updateStats() {
+      document.getElementById('coinValue').textContent = totalCoins;
+      document.getElementById('scoreValue').textContent = score;
+      document.getElementById('stageValue').textContent = currentStage;
+      document.getElementById('streakValue').textContent = streak;
+    }
+
+    function shuffleArray(array) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    function showResults() {
+      document.getElementById('quizScreen').classList.remove('active');
+      document.getElementById('matchingGame').classList.remove('active');
+      document.getElementById('memoryGame').classList.remove('active');
+      document.getElementById('resultScreen').style.display = 'block';
+      
+      const stageInfo = stageConfig[currentStage - 1];
+      let totalQuestions = stageInfo.questions;
+      if (currentGame === 'matching') totalQuestions = 6;
+      if (currentGame === 'memory') totalQuestions = 8;
+      
+      const coinsEarned = Math.floor((correctAnswers / totalQuestions) * stageInfo.reward);
+      totalCoins += coinsEarned;
+      
+      const percentage = (correctAnswers / totalQuestions) * 100;
+      if (percentage >= 60 && currentStage < 10 && !unlockedStages.includes(currentStage + 1)) {
+        unlockedStages.push(currentStage + 1);
+        showToast('ปลดล็อคด่านใหม่แล้ว! 解锁新关卡！🎉', '#22c55e');
+      }
+      
+      document.getElementById('finalScore').textContent = score + ' คะแนน';
+      document.getElementById('resultDetails').textContent = `คุณตอบถูก ${correctAnswers} จาก ${totalQuestions} ข้อ\nได้รับ ${coinsEarned} เหรียญ! 💰`;
+      
+      let message = 'ยอดเยี่ยม! 真棒！';
+      let icon = '🏆';
+      
+      if (percentage === 100) {
+        message = 'สมบูรณ์แบบ! 完美！';
+        icon = '🌟';
+      } else if (percentage >= 80) {
+        message = 'เก่งมาก! 很好！';
+        icon = '🏆';
+      } else if (percentage >= 60) {
+        message = 'ดีมาก! 不错！';
+        icon = '👍';
+      } else {
+        message = 'พยายามต่อไป! 加油！';
+        icon = '💪';
+      }
+      
+      document.getElementById('resultMessage').textContent = message;
+      document.querySelector('#resultScreen .start-icon').textContent = icon;
+      
+      updateCoinDisplay();
+      saveGameProgress();
+    }
+    
+    function showShop() {
+      document.getElementById('menuScreen').style.display = 'none';
+      document.getElementById('shopScreen').style.display = 'block';
+      updateCoinDisplay();
+      renderShop();
+    }
+    
+    function renderShop() {
+      const stageList = document.getElementById('stageList');
+      stageList.innerHTML = '';
+      
+      stageConfig.forEach(stage => {
+        const isUnlocked = unlockedStages.includes(stage.stage);
+        const canAfford = totalCoins >= stage.cost;
+        
+        const card = document.createElement('div');
+        card.style.padding = '20px';
+        card.style.borderRadius = '12px';
+        card.style.boxShadow = '0 4px 12px rgba(0,0,0,0.4)';
+        card.style.background = 'linear-gradient(135deg, #8b0000 0%, #dc143c 100%)';
+        card.style.border = '3px solid #ffd700';
+        card.style.color = '#ffe4b5';
+        card.style.opacity = isUnlocked ? '1' : (canAfford ? '0.9' : '0.5');
+        card.style.cursor = (isUnlocked || !canAfford) ? 'default' : 'pointer';
+        card.style.transition = 'all 0.3s';
+        
+        let icon = '🔒';
+        let statusText = `ราคา: ${stage.cost} เหรียญ`;
+        
+        if (isUnlocked) {
+          icon = '✅';
+          statusText = 'ปลดล็อคแล้ว';
+        } else if (!canAfford) {
+          icon = '🔒';
+          statusText = `ต้องการ ${stage.cost - totalCoins} เหรียญเพิ่ม`;
+        }
+        
+        card.innerHTML = `
+          <div style="font-size: 40px; margin-bottom: 8px;">${icon}</div>
+          <div style="font-size: 18px; font-weight: bold; margin-bottom: 8px; color: #ffd700;">${stage.name}</div>
+          <div style="font-size: 14px; opacity: 0.8; margin-bottom: 8px;">ความยาก: ${stage.difficulty}</div>
+          <div style="font-size: 14px; opacity: 0.8; margin-bottom: 8px;">${stage.questions} ข้อ | รางวัล: ${stage.reward} เหรียญ</div>
+          <div style="font-size: 16px; font-weight: bold; margin-top: 12px; color: #ffe4b5;">${statusText}</div>
+        `;
+        
+        if (!isUnlocked && canAfford) {
+          card.onmouseenter = () => {
+            card.style.transform = 'translateY(-4px)';
+            card.style.boxShadow = '0 8px 20px rgba(255, 215, 0, 0.4)';
+          };
+          card.onmouseleave = () => {
+            card.style.transform = 'translateY(0)';
+            card.style.boxShadow = '0 4px 12px rgba(0,0,0,0.4)';
+          };
+          card.onclick = () => unlockStage(stage.stage);
+        }
+        
+        stageList.appendChild(card);
+      });
+    }
+    
+    function unlockStage(stageNum) {
+      const stage = stageConfig[stageNum - 1];
+      
+      if (unlockedStages.includes(stageNum)) {
+        showToast('ด่านนี้ปลดล็อคแล้ว! 此关卡已解锁！', '#3b82f6');
+        return;
+      }
+      
+      if (totalCoins < stage.cost) {
+        showToast('เหรียญไม่พอ! 金币不足！💰', '#dc143c');
+        return;
+      }
+      
+      totalCoins -= stage.cost;
+      unlockedStages.push(stageNum);
+      unlockedStages.sort((a, b) => a - b);
+      
+      showToast(`ปลดล็อค ${stage.name} สำเร็จ! 解锁成功！🎉`, '#22c55e');
+      updateCoinDisplay();
+      saveGameProgress();
+      renderShop();
+    }
+    
+    function showStageSelect(gameType) {
+      currentGame = gameType;
+      document.getElementById('menuScreen').style.display = 'none';
+      document.getElementById('stageSelectScreen').style.display = 'block';
+      
+      let gameTitle = '';
+      if (gameType === 'quiz') gameTitle = 'ทายคำศัพท์';
+      else if (gameType === 'matching') gameTitle = 'จับคู่คำ';
+      else if (gameType === 'memory') gameTitle = 'เกมจำคำ';
+      
+      document.getElementById('gameTypeTitle').textContent = `เลือกด่าน - ${gameTitle}`;
+      updateCoinDisplay();
+      renderStageSelect();
+    }
+    
+    function renderStageSelect() {
+      const stageList = document.getElementById('stageSelectList');
+      stageList.innerHTML = '';
+      
+      stageConfig.forEach(stage => {
+        const isUnlocked = unlockedStages.includes(stage.stage);
+        
+        const card = document.createElement('div');
+        card.style.padding = '20px';
+        card.style.borderRadius = '12px';
+        card.style.boxShadow = '0 4px 12px rgba(0,0,0,0.4)';
+        card.style.background = 'linear-gradient(135deg, #8b0000 0%, #dc143c 100%)';
+        card.style.border = '3px solid #ffd700';
+        card.style.color = '#ffe4b5';
+        card.style.cursor = isUnlocked ? 'pointer' : 'not-allowed';
+        card.style.opacity = isUnlocked ? '1' : '0.5';
+        card.style.transition = 'all 0.3s';
+        card.style.width = '180px';
+        card.style.textAlign = 'center';
+        
+        if (isUnlocked) {
+          card.onmouseenter = () => {
+            card.style.transform = 'translateY(-4px)';
+            card.style.boxShadow = '0 8px 20px rgba(255, 215, 0, 0.4)';
+          };
+          card.onmouseleave = () => {
+            card.style.transform = 'translateY(0)';
+            card.style.boxShadow = '0 4px 12px rgba(0,0,0,0.4)';
+          };
+          card.onclick = () => startGameWithStage(stage.stage);
+        } else {
+          card.onclick = () => showToast('ปลดล็อคด่านในร้านค้าก่อน! 请先在商店解锁！🏪', '#dc143c');
+        }
+        
+        let icon = isUnlocked ? '🎮' : '🔒';
+        let statusText = isUnlocked ? 'คลิกเพื่อเล่น' : 'ปิดล็อค';
+        
+        card.innerHTML = `
+          <div style="font-size: 32px; margin-bottom: 8px;">${icon}</div>
+          <div style="font-size: 16px; font-weight: bold; margin-bottom: 4px; color: #ffd700;">ด่าน ${stage.stage}</div>
+          <div style="font-size: 13px; opacity: 0.8;">${stage.difficulty}</div>
+          <div style="font-size: 12px; opacity: 0.7; margin-top: 4px;">${statusText}</div>
+        `;
+        
+        stageList.appendChild(card);
+      });
+    }
+
+    function loadQuestion() {
+      const stageInfo = stageConfig[currentStage - 1];
+      
+      if (currentQuestion >= stageInfo.questions) {
+        showResults();
+        return;
+      }
+
+      const vocabSet = vocabulary.slice(0, stageInfo.vocabCount);
+      const word = vocabSet[Math.floor(Math.random() * vocabSet.length)];
+      
+      document.getElementById('chineseChar').textContent = word.char;
+      
+      if (currentStage >= 3) {
+        document.getElementById('pinyinText').style.display = 'none';
+      } else {
+        document.getElementById('pinyinText').style.display = 'block';
+        document.getElementById('pinyinText').textContent = word.pinyin;
+      }
+
+      const wrongOptions = vocabSet
+        .filter(v => v.meaning !== word.meaning)
+        .map(v => v.meaning);
+      const shuffledWrong = shuffleArray(wrongOptions);
+      
+      let numOptions = 4;
+      if (currentStage >= 5) numOptions = 6;
+      if (currentStage >= 8) numOptions = 8;
+      
+      const selectedWrong = shuffledWrong.slice(0, numOptions - 1);
+      const options = shuffleArray([word.meaning, ...selectedWrong]);
+      
+      const optionsGrid = document.getElementById('optionsGrid');
+      optionsGrid.innerHTML = '';
+      
+      if (numOptions === 6) {
+        optionsGrid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+      } else if (numOptions === 8) {
+        optionsGrid.style.gridTemplateColumns = 'repeat(4, 1fr)';
+      } else {
+        optionsGrid.style.gridTemplateColumns = 'repeat(2, 1fr)';
+      }
+
+      options.forEach(option => {
+        const button = document.createElement('button');
+        button.className = 'option-button';
+        button.textContent = option;
+        button.onclick = () => checkAnswer(option, word.meaning, button);
+        optionsGrid.appendChild(button);
+      });
+
+      document.getElementById('feedback').textContent = '';
+      document.getElementById('nextButton').style.display = 'none';
+      isAnswered = false;
+      updateStats();
+    }
+
+    function checkAnswer(selected, correct, button) {
+      if (isAnswered) return;
+      
+      isAnswered = true;
+      const buttons = document.querySelectorAll('.option-button');
+      buttons.forEach(btn => btn.disabled = true);
+
+      if (selected === correct) {
+        button.classList.add('correct');
+        document.getElementById('feedback').textContent = '正确！ถูกต้อง! 🎉';
+        document.getElementById('feedback').style.color = '#00ff00';
+        const points = 10 * currentStage;
+        score += points;
+        streak++;
+        correctAnswers++;
+        showToast('+' + points + ' คะแนน!', '#22c55e');
+      } else {
+        button.classList.add('incorrect');
+        document.getElementById('feedback').textContent = '错误！ลองใหม่! 💪';
+        document.getElementById('feedback').style.color = '#ff6b6b';
+        streak = 0;
+        
+        buttons.forEach(btn => {
+          if (btn.textContent === correct) {
+            btn.classList.add('correct');
+          }
+        });
+      }
+
+      updateStats();
+      document.getElementById('nextButton').style.display = 'block';
+    }
+
+    function goToMenu() {
+      // ซ่อนทุกหน้าจอเกม
+      document.getElementById('quizScreen').classList.remove('active');
+      document.getElementById('matchingGame').classList.remove('active');
+      document.getElementById('memoryGame').classList.remove('active');
+      document.getElementById('resultScreen').style.display = 'none';
+      document.getElementById('stageSelectScreen').style.display = 'none';
+      document.getElementById('shopScreen').style.display = 'none';
+
+      // แสดงเมนูเลือก 3 เกม
+      document.getElementById('menuScreen').style.display = 'block';
+
+      // แสดง header + stats
+      document.getElementById('header').style.display = 'block';
+      document.getElementById('statsBar').style.display = 'flex';
+      
+      score = 0;
+      streak = 0;
+      correctAnswers = 0;
+      updateStats();
+      updateCoinDisplay();
+    }
+
+    function startGameWithStage(stageNum) {
+      currentStage = stageNum;
+      currentQuestion = 0;
+      score = 0;
+      streak = 0;
+      correctAnswers = 0;
+      
+      document.getElementById('header').style.display = 'block';
+      document.getElementById('statsBar').style.display = 'flex';
+      document.getElementById('stageSelectScreen').style.display = 'none';
+      document.getElementById('resultScreen').style.display = 'none';
+      
+      if (currentGame === 'quiz') {
+        document.getElementById('quizScreen').classList.add('active');
+        updateStats();
+        loadQuestion();
+      } else if (currentGame === 'matching') {
+        document.getElementById('matchingGame').classList.add('active');
+        updateStats();
+        loadMatchingGame();
+      } else if (currentGame === 'memory') {
+        document.getElementById('memoryGame').classList.add('active');
+        updateStats();
+        loadMemoryGame();
+      }
+    }
+
+    function loadMatchingGame() {
+      matchedPairs = 0;
+      selectedChinese = null;
+      selectedThai = null;
+      
+      const matchWords = shuffleArray(vocabulary.slice(0, 6));
+      
+      const chineseCol = document.getElementById('chineseColumn');
+      const thaiCol = document.getElementById('thaiColumn');
+      chineseCol.innerHTML = '';
+      thaiCol.innerHTML = '';
+      
+      const shuffledThai = shuffleArray([...matchWords]);
+      
+      matchWords.forEach((word) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-button';
+        btn.textContent = word.char;
+        btn.dataset.meaning = word.meaning;
+        btn.onclick = () => selectChinese(btn);
+        chineseCol.appendChild(btn);
+      });
+      
+      shuffledThai.forEach((word) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-button';
+        btn.textContent = word.meaning;
+        btn.dataset.meaning = word.meaning;
+        btn.onclick = () => selectThai(btn);
+        thaiCol.appendChild(btn);
+      });
+      
+      document.getElementById('matchFeedback').textContent = '';
+    }
+
+    function selectChinese(btn) {
+      if (btn.disabled) return;
+      
+      if (selectedChinese) {
+        selectedChinese.style.borderColor = '#ffd700';
+      }
+      selectedChinese = btn;
+      btn.style.borderColor = '#00ffff';
+      
+      if (selectedThai) {
+        checkMatch();
+      }
+    }
+
+    function selectThai(btn) {
+      if (btn.disabled) return;
+      
+      if (selectedThai) {
+        selectedThai.style.borderColor = '#ffd700';
+      }
+      selectedThai = btn;
+      btn.style.borderColor = '#00ffff';
+      
+      if (selectedChinese) {
+        checkMatch();
+      }
+    }
+
+    function checkMatch() {
+      if (selectedChinese.dataset.meaning === selectedThai.dataset.meaning) {
+        selectedChinese.classList.add('correct');
+        selectedThai.classList.add('correct');
+        selectedChinese.disabled = true;
+        selectedThai.disabled = true;
+        
+        document.getElementById('matchFeedback').textContent = '正确！ถูกต้อง! 🎉';
+        document.getElementById('matchFeedback').style.color = '#00ff00';
+        
+        score += 20 * currentStage;
+        correctAnswers++;
+        matchedPairs++;
+        showToast(`+${20 * currentStage} คะแนน!`, '#22c55e');
+        
+        if (matchedPairs === 6) {
+          setTimeout(showResults, 1000);
+        }
+      } else {
+        document.getElementById('matchFeedback').textContent = '错误！ลองใหม่! 💪';
+        document.getElementById('matchFeedback').style.color = '#ff6b6b';
+        
+        setTimeout(() => {
+          if (selectedChinese) selectedChinese.style.borderColor = '#ffd700';
+          if (selectedThai) selectedThai.style.borderColor = '#ffd700';
+          document.getElementById('matchFeedback').textContent = '';
+        }, 1000);
+      }
+      
+      selectedChinese = null;
+      selectedThai = null;
+      updateStats();
+    }
+
+    function loadMemoryGame() {
+      matchedCards = 0;
+      flippedCards = [];
+      
+      const memoryWords = vocabulary.slice(0, 8);
+      const cards = [];
+      
+      memoryWords.forEach(word => {
+        cards.push({ type: 'chinese', content: word.char, id: word.char });
+        cards.push({ type: 'thai', content: word.meaning, id: word.char });
+      });
+      
+      const shuffledCards = shuffleArray(cards);
+      const grid = document.getElementById('memoryGrid');
+      grid.innerHTML = '';
+      
+      shuffledCards.forEach((card) => {
+        const cardEl = document.createElement('button');
+        cardEl.className = 'option-button';
+        cardEl.textContent = '🀄';
+        cardEl.dataset.id = card.id;
+        cardEl.dataset.content = card.content;
+        cardEl.dataset.flipped = 'false';
+        cardEl.style.fontSize = '32px';
+        cardEl.style.height = '80px';
+        cardEl.onclick = () => flipCard(cardEl);
+        grid.appendChild(cardEl);
+      });
+      
+      document.getElementById('memoryFeedback').textContent = '';
+    }
+
+    function flipCard(card) {
+      if (card.dataset.flipped === 'true' || flippedCards.length >= 2) return;
+      
+      card.textContent = card.dataset.content;
+      card.dataset.flipped = 'true';
+      flippedCards.push(card);
+      
+      if (flippedCards.length === 2) {
+        setTimeout(checkMemoryMatch, 800);
+      }
+    }
+
+    function checkMemoryMatch() {
+      const [card1, card2] = flippedCards;
+      
+      if (card1.dataset.id === card2.dataset.id) {
+        card1.classList.add('correct');
+        card2.classList.add('correct');
+        card1.disabled = true;
+        card2.disabled = true;
+        
+        document.getElementById('memoryFeedback').textContent = '正确！ถูกต้อง! 🎉';
+        document.getElementById('memoryFeedback').style.color = '#00ff00';
+        
+        score += 30 * currentStage;
+        correctAnswers++;
+        matchedCards++;
+        showToast(`+${30 * currentStage} คะแนน!`, '#22c55e');
+        
+        if (matchedCards === 8) {
+          setTimeout(showResults, 1000);
+        }
+      } else {
+        card1.textContent = '🀄';
+        card2.textContent = '🀄';
+        card1.dataset.flipped = 'false';
+        card2.dataset.flipped = 'false';
+        
+        document.getElementById('memoryFeedback').textContent = 'ลองใหม่! 加油！💪';
+        document.getElementById('memoryFeedback').style.color = '#ff6b6b';
+        
+        setTimeout(() => {
+          document.getElementById('memoryFeedback').textContent = '';
+        }, 1000);
+      }
+      
+      flippedCards = [];
+      updateStats();
+    }
+
+    function restartGame() {
+      showStageSelect(currentGame);
+    }
+
+    // Event Listeners
+    document.getElementById('homeButton').onclick = goToMenu;
+    document.getElementById('homeButton2').onclick = goToMenu;
+    document.getElementById('homeButton3').onclick = goToMenu;
+    document.getElementById('backToMenu').onclick = goToMenu;
+    document.getElementById('backToMenu2').onclick = goToMenu;
+    
+    document.getElementById('shopButton').onclick = showShop;
+    document.getElementById('quizCard').onclick = () => showStageSelect('quiz');
+    document.getElementById('matchCard').onclick = () => showStageSelect('matching');
+    document.getElementById('memoryCard').onclick = () => showStageSelect('memory');
+    
+    document.getElementById('playAgainButton').onclick = restartGame;
+    document.getElementById('nextButton').onclick = () => {
+      currentQuestion++;
+      loadQuestion();
+    };
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c045db92403894f',t:'MTc2ODgwNTA5My4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
